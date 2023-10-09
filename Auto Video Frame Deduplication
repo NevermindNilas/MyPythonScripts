@@ -1,0 +1,36 @@
+import os
+import shutil
+import cv2
+import subprocess
+import sys
+'''
+automated frame deduplication using ffmpeg
+'''
+input_folder = os.path.join('.', "input")
+output_folder = os.path.join('.', "output")
+
+def main(input_folder, output_folder):
+    os.makedirs(input_folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
+
+    video_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp4', '.avi', '.mkv', '.mov'))]
+    video_files.sort()
+    
+    if not video_files:
+        sys.exit("No videos found in the input folder")
+    
+    for i, video_file in enumerate(video_files):
+        if video_file.endswith(".mp4"):
+            output = video_file.split('.')[0] + ".mp4"
+        else:
+            output = video_file + "_" + str(i) + ".mp4"
+        
+        video_file = os.path.join(input_folder, video_file)
+        output_path = os.path.join(output_folder, output)
+        
+        subprocess_command = f"ffmpeg -i {video_file} -vf mpdecimate,setpts=N/FRAME_RATE/TB {output_path}"
+        subprocess.call(subprocess_command, shell=True)
+        print("Deduplicated video", video_file)
+        
+if __name__ == "__main__":
+    main(input_folder, output_folder)
